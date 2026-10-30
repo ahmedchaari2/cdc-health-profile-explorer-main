@@ -20,3 +20,7 @@
 .button-secondary{border:1px solid var(--line);background:rgba(155,184,220,.07);color:var(--text);padding:15px 17px}
 .button-secondary:hover{border-color:rgba(66,214,206,.35);background:rgba(66,214,206,.08)}
 @media(max-width:480px){.form-actions{grid-template-columns:1fr}.button-secondary{width:100%}}
+
+
+/* Message de repli lorsque les graphiques ne peuvent pas être rendus. */
+.chart-fallback{min-height:120px;display:grid;place-items:center;padding:22px;text-align:center;color:var(--muted);font-size:12px;line-height:1.7;border:1px dashed rgba(155,184,220,.22);border-radius:12px;background:rgba(8,19,33,.28)}
