@@ -19,7 +19,9 @@
       <span><strong>CDC Health</strong><small>PROFILE EXPLORER</small></span>
     </a>
     <nav class="nav-links" aria-label="Navigation principale">
-      <a href="#overview">Vue d’ensemble</a><a href="#explorer">Explorer un profil</a><a href="#method">Méthodologie</a>
+      <a href="{{ url_for('groups') }}" class="{% if page == 'groups' %}active{% endif %}" {% if page == 'groups' %}aria-current="page"{% endif %}>Comprendre les groupes</a>
+      <a href="{{ url_for('index') }}" class="{% if page == 'form' %}active{% endif %}" {% if page == 'form' %}aria-current="page"{% endif %}>Explorer un profil</a>
+      <a href="{{ url_for('methodology') }}" class="{% if page == 'method' %}active{% endif %}" {% if page == 'method' %}aria-current="page"{% endif %}>Méthodologie</a>
     </nav>
     <span class="model-pill"><span class="status-dot {% if ready %}online{% else %}offline{% endif %}"></span>{{ model_name }}</span>
   </header>
@@ -30,7 +32,7 @@
         <div class="eyebrow"><span class="eyebrow-line"></span> CLUSTERING NON SUPERVISÉ · CDC DIABETES</div>
         <h1>Explorer les profils<br><span>de santé et de mode de vie.</span></h1>
         <p>Une interface interactive pour comprendre les groupes identifiés par le modèle retenu, comparer leurs caractéristiques et explorer l’affectation d’une nouvelle observation.</p>
-        <div class="hero-actions"><a class="button button-primary" href="#explorer">Explorer un profil <span>↗</span></a><a class="text-link" href="#overview">Consulter les groupes <span>↓</span></a></div>
+        <div class="hero-actions"><a class="button button-primary" href="{{ url_for('index') }}">Explorer un profil <span>↗</span></a><a class="text-link" href="{{ url_for('groups') }}">Consulter les groupes <span>↗</span></a></div>
         <div class="hero-footnote"><span class="mini-shield">✓</span> Description statistique · Pas de diagnostic médical</div>
       </div>
       <div class="hero-art" aria-hidden="true">
@@ -68,6 +70,7 @@
 
     {% if error_message %}<div class="error-alert" role="alert"><strong>Vérification du formulaire</strong><span>{{ error_message }}</span></div>{% endif %}
 
+    {% if page == 'groups' %}
     <section id="overview" class="section-block">
       <div class="section-heading"><div><div class="eyebrow">01 / VUE D’ENSEMBLE</div><h2>Le modèle en quelques indicateurs.</h2><p>Résumé calculé à partir de l’échantillon et du modèle sélectionné dans le notebook.</p></div><div class="source-tag"><span class="source-icon">↳</span><span><strong>Source</strong><small>CDC Diabetes Health Indicators · UCI 891</small></span></div></div>
       <div class="metric-grid">
@@ -89,23 +92,25 @@
 
       <div class="panel chart-panel"><div class="panel-heading"><div><span class="panel-kicker">PROFILS COMPARÉS</span><h3>Quelles caractéristiques distinguent les groupes ?</h3><p>La couleur indique l’écart à la moyenne de l’échantillon, en écarts-types ; les infobulles montrent les moyennes observées.</p></div></div><div id="profile-chart" class="profile-chart" role="img" aria-label="Carte thermique des profils moyens par cluster"></div></div>
     </section>
+    {% endif %}
 
+    {% if page == 'form' %}
     <section id="explorer" class="section-block explorer-section">
       <div class="section-heading"><div><div class="eyebrow">02 / EXPLORATEUR DE PROFIL</div><h2>Explorer une nouvelle observation.</h2><p>Renseignez les variables du jeu de données pour obtenir une affectation par le modèle retenu.</p></div><div class="private-tag"><span>✳</span> Traitement à la demande</div></div>
       <div class="explorer-layout">
         <form method="post" action="/#prediction-result" class="profile-form" id="profile-form">
-          <div class="form-intro"><div class="form-step">01</div><div><h3>Caractéristiques du profil</h3><p>Les 21 variables attendues sont requises. Les valeurs doivent suivre les codes du jeu original.</p></div></div>
+          <div class="form-intro"><div class="form-step">01</div><div><h3>Caractéristiques du profil</h3><p>Renseignez au moins cinq variables. Les champs laissés vides sont imputés avec les valeurs mémorisées pendant l’entraînement. Respectez les codes du jeu original.</p></div></div>
           {% for group in form_groups %}
           <fieldset class="field-group"><legend>{{ group.title }}</legend><p class="group-description">{{ group.description }}</p><div class="fields-grid">
             {% for field in group.fields %}
-            <label class="field"><span class="field-label">{{ field.label }} <span class="required-star">*</span></span>
+            <label class="field"><span class="field-label">{{ field.label }}</span>
               {% if field.kind == 'select' %}
-              <select name="{{ field.key }}" id="{{ field.key }}" required>
+              <select name="{{ field.key }}" id="{{ field.key }}">
                 <option value="" disabled {% if not form_values.get(field.key) %}selected{% endif %}>Choisir une valeur…</option>
                 {% for option in field.options %}<option value="{{ option.value }}" {% if form_values.get(field.key, '') == option.value %}selected{% endif %}>{{ option.label }}</option>{% endfor %}
               </select>
               {% else %}
-              <input type="number" name="{{ field.key }}" id="{{ field.key }}" min="{{ field.min }}" max="{{ field.max }}" step="{{ field.step }}" placeholder="{{ field.placeholder }}" value="{{ form_values.get(field.key, '') }}" required>
+              <input type="number" name="{{ field.key }}" id="{{ field.key }}" min="{{ field.min }}" max="{{ field.max }}" step="{{ field.step }}" placeholder="{{ field.placeholder }}" value="{{ form_values.get(field.key, '') }}">
               {% endif %}
               <small>{{ field.help }}</small>
             </label>
@@ -121,7 +126,9 @@
         </aside>
       </div>
     </section>
+    {% endif %}
 
+    {% if page == 'method' %}
     <section id="method" class="section-block method-section">
       <div class="section-heading"><div><div class="eyebrow">03 / MÉTHODOLOGIE</div><h2>Comprendre le périmètre du modèle.</h2><p>Les informations ci-dessous sont liées au pipeline enregistré par le notebook.</p></div></div>
       <div class="method-grid">
@@ -131,16 +138,27 @@
       </div>
       <div class="limitations-panel"><div class="limitations-icon">!</div><div><h3>Limites d’interprétation</h3><ul><li>Le clustering porte sur un échantillon de 3 000 personnes au maximum et dépend des paramètres retenus.</li><li>Les deux variables du nuage de points sont une vue descriptive ; le clustering utilise toutes les variables standardisées.</li><li>La distance euclidienne appliquée à des variables binaires et ordinales a des limites ; Gower ou K-Prototypes peuvent être étudiés comme perspectives, sans être utilisés ici.</li><li>Si DBSCAN est le modèle retenu, les métriques internes sont calculées hors bruit et l’affectation des nouvelles observations est une règle approchée.</li><li>Les données CDC sont anciennes et les groupes ne démontrent aucune causalité.</li></ul></div></div>
     </section>
+    {% endif %}
 
     <footer class="footer"><a class="brand footer-brand" href="#top"><span class="brand-mark"><span></span><span></span><span></span></span><span><strong>CDC Health</strong><small>PROFILE EXPLORER</small></span></a><p>Projet pédagogique de data science · Clustering non supervisé</p><a href="#top" class="back-top">Retour en haut ↑</a></footer>
   </main>
 
   {% if dashboard %}<script id="dashboard-data" type="application/json">{{ dashboard|tojson }}</script>{% endif %}
   <script>
+    const currentPage = {{ page|tojson }};
     const dashboardData = {% if dashboard %}{{ dashboard|tojson }}{% else %}null{% endif %};
     const palette = ['#42d6ce','#6c8cff','#b18cff','#f7b955','#5da6ff','#ed7dba','#82c997','#ff8b70','#a5b4c9'];
     const plotLayout = {paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(0,0,0,0)',font:{family:'DM Sans, sans-serif',color:'#a8bad3',size:12},margin:{l:48,r:20,t:20,b:48},xaxis:{gridcolor:'rgba(164,187,215,.10)',zerolinecolor:'rgba(164,187,215,.12)'},yaxis:{gridcolor:'rgba(164,187,215,.10)',zerolinecolor:'rgba(164,187,215,.12)'},legend:{orientation:'h',y:-0.24,x:0,font:{size:11}}};
-    if (dashboardData && window.Plotly) {
+    const chartIds = ['size-chart', 'scatter-chart', 'profile-chart'];
+    const showChartMessage = (id, message) => {
+      const node = document.getElementById(id);
+      if (node) node.innerHTML = `<div class="chart-fallback">${message}</div>`;
+    };
+    if (currentPage === 'groups' && !dashboardData) {
+      chartIds.forEach(id => showChartMessage(id, 'Les statistiques descriptives ne sont pas disponibles. Vérifiez le fichier cluster_dashboard_data.json.'));
+    } else if (currentPage === 'groups' && !window.Plotly) {
+      chartIds.forEach(id => showChartMessage(id, 'La bibliothèque de visualisation n’a pas pu être chargée. Vérifiez la connexion au CDN Plotly puis actualisez la page.'));
+    } else if (currentPage === 'groups' && dashboardData && window.Plotly) {
       const sizes = dashboardData.cluster_sizes || [];
       const traces = sizes.map((g, i) => ({type:'bar',x:[g.label],y:[g.percentage],name:g.label,marker:{color:g.is_noise?'#8995a7':palette[i%palette.length]},text:[`${Number(g.percentage).toFixed(1)} %`],textposition:'outside',hovertemplate:'%{x}<br>%{y:.2f} % de l’échantillon<extra></extra>'}));
       if (document.getElementById('size-chart')) Plotly.newPlot('size-chart', traces, {...plotLayout,showlegend:false,bargap:.42,yaxis:{...plotLayout.yaxis,title:'Part de l’échantillon (%)',rangemode:'tozero'},xaxis:{...plotLayout.xaxis,title:''}}, {responsive:true,displaylogo:false});
@@ -157,6 +175,9 @@
       const z = selectedKeys.map(key=>profiles.map(p=>{const v=p.values[key], m=overall[key], s=stds[key]; return v===null||v===undefined||m===undefined||!s?0:(Number(v)-Number(m))/Number(s);}));
       const text = selectedKeys.map(key=>profiles.map(p=>{const v=p.values[key];if(v===null||v===undefined)return 'N/D';if(['HighBP','HighChol','Smoker','HeartDiseaseorAttack','PhysActivity','DiffWalk'].includes(key))return `${(Number(v)*100).toFixed(1)} %`;return Number(v).toFixed(2);}));
       if (document.getElementById('profile-chart') && profiles.length) Plotly.newPlot('profile-chart',[{type:'heatmap',x:profiles.map(p=>p.label),y:selectedKeys.map(k=>labels[k]),z,text,colorscale:[[0,'#667ce7'],[.5,'#111f34'],[1,'#42d6ce']],zmid:0,zmin:-1.8,zmax:1.8,showscale:true,colorbar:{title:'Écart<br>(écarts-types)',tickfont:{color:'#a8bad3'},titlefont:{color:'#a8bad3'}},hovertemplate:'%{y}<br>%{x}<br>Moyenne brute : %{text}<br>Écart standardisé : %{z:.2f}<extra></extra>'}],{...plotLayout,height:430,margin:{l:180,r:55,t:20,b:80},xaxis:{...plotLayout.xaxis,title:'Groupe'},yaxis:{...plotLayout.yaxis,automargin:true},legend:{...plotLayout.legend}}, {responsive:true,displaylogo:false});
+      if (!sizes.length) showChartMessage('size-chart', 'Aucune donnée de répartition disponible.');
+      if (!points.length) showChartMessage('scatter-chart', 'Aucun point de visualisation disponible.');
+      if (!profiles.length) showChartMessage('profile-chart', 'Aucun profil moyen disponible.');
     }
     // Smooth-scrolling is purely navigational and does not affect model results.
     document.querySelectorAll('a[href^="#"]').forEach(a=>a.addEventListener('click', e=>{const id=a.getAttribute('href');const target=document.querySelector(id);if(target){e.preventDefault();target.scrollIntoView({behavior:'smooth',block:'start'});history.replaceState(null,'',id);}}));
